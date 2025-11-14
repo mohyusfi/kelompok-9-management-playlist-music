@@ -40,6 +40,10 @@ ID_t generate_user_id();
 ID_t generate_music_id();
 ID_t generate_playlist_id();
 
+int find_user_index_by_username(const string &username);
+int find_music_index_by_id(ID_t id);
+int find_playlist_index_by_id(ID_t id);
+
 
 void clear_input();
 
@@ -69,5 +73,26 @@ ID_t generate_playlist_id() {
 void clear_input() {
     cin.clear();
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+int find_user_index_by_username(const string &username) {
+    for (size_t i = 0; i < users.size(); ++i) {
+        if (users[i].username == username) return (int) i;
+    }
+    return -1;
+}
+
+int find_music_index_by_id(const ID_t id) {
+    for (size_t i = 0; i < musics.size(); ++i) {
+        if (musics[i].id == id) return (int) i;
+    }
+    return -1;
+}
+
+int find_playlist_index_by_id(const ID_t id) {
+    for (size_t i = 0; i < playlists.size(); ++i) {
+        if (playlists[i].id == id) return (int) i;
+    }
+    return -1;
 }
 
