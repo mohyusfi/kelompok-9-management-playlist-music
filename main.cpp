@@ -55,8 +55,8 @@ void update_music();
 void delete_music();
 
 // Playlist manajemen (admin & user create)
-bool is_pl_id_in_playlist_ids(ID_t playlist_id, string &username);
-void add_pl_to_playlis_ids(ID_t playlist_id, string &username);
+bool is_pl_id_in_playlist_ids(ID_t playlist_id, const string &username);
+void add_pl_to_playlis_ids(ID_t playlist_id, const string &username);
 void list_playlist_current_user(const string &username);
 void list_playlists_all_user();
 void show_playlist_contents(const Playlist &playlist);
@@ -277,18 +277,18 @@ void delete_music() {
     cout << "Music dihapus dan diremove dari semua playlist.\n";
 }
 
-bool is_pl_id_in_playlist_ids(ID_t playlist_id, string &username) {
+bool is_pl_id_in_playlist_ids(ID_t playlist_id, const string &username) {
     int user_index = find_user_index_by_username(username);
 
     for (auto &pl_id : users.at(user_index).playlist_ids)
     {
-        if (pl_id == playlist_id) return true;        
+        if (pl_id == playlist_id) return true;
     }
 
     return false;
 }
 
-void add_pl_to_playlis_ids(ID_t playlist_id, string &username) {
+void add_pl_to_playlis_ids(ID_t playlist_id, const string &username) {
     bool is_exists = is_pl_id_in_playlist_ids(playlist_id, username);
 
     if (is_exists) {
@@ -327,7 +327,7 @@ void list_playlist_current_user(const string &username) {
             cout << "id:" << p.id << " | " << p.name << " | pemilik:" << p.owner_username
                     << " | Jumlah Musik:"<< p.music_ids.size() << "\n";
         }
-    } 
+    }
 }
 
 void list_playlists_all_user() {
@@ -368,12 +368,21 @@ void delete_user_playlist(const ID_t playlist_id, const string &username) {
         return;
     }
 
+    auto &playlist_ids = users.at(user_index).playlist_ids;
+
     if (username != playlists.at(pl_index).owner_username) {
+        if (is_pl_id_in_playlist_ids(playlist_id, username) == true) {
+            playlist_ids.erase(
+                remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
+                playlist_ids.end()
+                );
+            cout << "playlist berhasil dikoleksimu mas" << endl;
+            return;
+        }
         cout << "tidak bisa delete playlist orang bego" << endl;
         return;
     }
 
-    auto playlist_ids = users.at(user_index).playlist_ids;
 
     playlist_ids.erase(
         remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
@@ -661,7 +670,7 @@ void user_menu(string &username) {
                 list_playlist_current_user(username);
                 playlist_menu(username);
                 break;
-            } 
+            }
             case 0: return;
             default: cout << "Pilihan tidak valid.\n";
         }
