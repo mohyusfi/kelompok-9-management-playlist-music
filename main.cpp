@@ -206,4 +206,24 @@ void update_music() {
     cout << "Music updated.\n";
 }
 
+void delete_music() {
+    list_all_music();
+    int id;
+    cout << "\nMasukkan music id untuk dihapus: "; cin >> id;
+    int idx = find_music_index_by_id(id);
+    if (idx == -1) {
+        cout << "Music tidak ada.\n";
+        return;
+    }
+    // remove references from playlists
+    for (auto &pl: playlists) {
+        pl.music_ids.erase(
+            remove(pl.music_ids.begin(), pl.music_ids.end(), id),
+            pl.music_ids.end()
+        );
+    }
+    musics.erase(musics.begin() + idx);
+    cout << "Music dihapus dan diremove dari semua playlist.\n";
+}
+
 
