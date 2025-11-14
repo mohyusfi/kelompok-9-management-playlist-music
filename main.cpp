@@ -79,8 +79,34 @@ void data_dummy();
 
 int main()
 {
-
-
+    seed_admin();
+    data_dummy();
+    cout << "Welcome To Spotify Versi Jadul\n";
+    while (true) {
+        cout << "\n=== MAIN MENU ===\n"
+                << "1) Register\n"
+                << "2) Login\n"
+                << "0) Exit\n"
+                << "Choose: ";
+        int choice;
+        cin >> choice;
+        if (choice == 1) {
+            register_user();
+        } else if (choice == 2) {
+            string uname, role;
+            ID_t uid = login_user(uname, role);
+            if (uid != -1) {
+                if (role == "admin") admin_menu(uname);
+                else user_menu(uname);
+            }
+        } else if (choice == 0) {
+            cout << "Bye.\n";
+            break;
+        } else {
+            cout << "Pilihan tidak valid.\n";
+        }
+    }
+    return 0;
 }
 
 ID_t generate_user_id() {
