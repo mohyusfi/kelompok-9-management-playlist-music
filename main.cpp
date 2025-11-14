@@ -72,6 +72,10 @@ void admin_menu(const string &username);
 void user_menu(const string &username);
 void playlist_menu(const string &username);
 
+// sample data
+void seed_admin();
+void data_dummy();
+
 
 int main()
 {
@@ -566,6 +570,71 @@ void user_menu(const string &username) {
             case 0: return;
             default: cout << "Pilihan tidak valid.\n";
         }
+    }
+}
+
+void seed_admin() {
+    // create default admin if none exists
+    if (find_user_index_by_username("admin") == -1) {
+        users.push_back({generate_user_id(), "admin", "admin", "admin"});
+    }
+
+    users.push_back({
+        .id = generate_music_id(),
+        .username = "yusfi",
+        .password = "123",
+        .role = "user",
+        .playlist_ids = {},
+    });
+}
+
+void data_dummy() {
+    string title[50] = {
+        "Blue", "Garam & Madu", "Mangu", "Kita Usahakan Lagi", "Lesung Pipi",
+        "Tanpa Cinta", "Pretty Little Baby", "Stecu", "That's So True", "H.S.K.T",
+        "Moonlight Echo", "Fading Neon", "Midnight Run", "Silent Waves", "Broken Frame",
+        "Dreamwalker", "After the Rain", "Lost Coordinates", "Velvet Sky", "Running Slow",
+        "Summer Calls", "Golden Hour Glass", "Static Heart", "Drowned Voices", "Paper Crown",
+        "Crystal Sun", "Under the Bridge Lights", "Neon Valley", "Glassbound", "Digital Breeze",
+        "Shadowtone", "Lightphase", "Horizon Line", "Snowrunner", "Faultline Nights",
+        "Wonderdusk", "Rainfall Sketch", "Timeless Echo", "Gravity Sleep", "Bright Again",
+        "Echo Chamber", "Sundown Memory", "Cold Coffee", "Minute Before Dawn", "Airplane Glow",
+        "Lost City Radio", "Silver Path", "Night Arcade", "Sunset Rewind", "Skyless"
+    };
+
+    string artist[50] = {
+        "Yung Kai", "Tenxi", "Fourtwnty", "Batas Senja", "Raim Laode",
+        "Tiara Andini", "Connie Francis", "Faris Adam", "Gracie Abrams", "Lee Hi",
+        "Arden Vox", "Lumen Gray", "Kaito Blue", "Vierra Solis", "Moonshift",
+        "Ethereal One", "Atlas Vale", "Nira Kaze", "Ollin Ray", "Juno M",
+        "Soft Season", "Amber Lain", "Kiro Wave", "Della Nova", "Ives Oracle",
+        "Ryn Marlowe", "Velanote", "Cryden", "Juniper Vale", "Nova Faye",
+        "Zed Avalon", "Leora Hale", "Soren Vale", "Cryst Lys", "Veria Noir",
+        "Ember Kid", "Miko Shore", "Caelin Drift", "Draey Luna", "Kyen Mori",
+        "Sable Arc", "Noir Vale", "Auri Lix", "Greyson Hale", "Rhea Mori",
+        "Ollan Drift", "Sierra Vale", "Cryo Pulse", "Nova Aure", "Vyre Sol"
+    };
+
+    int duration[50] = {
+        192, 168, 241, 225, 190,
+        236, 142, 185, 178, 213,
+        221, 175, 252, 199, 169,
+        207, 230, 245, 182, 238,
+        224, 250, 181, 177, 216,
+        248, 206, 239, 173, 228,
+        200, 194, 160, 261, 238,
+        213, 171, 240, 189, 227,
+        191, 179, 214, 208, 196,
+        243, 164, 233, 205, 198
+    };
+
+    for (int i = 0; i < 50; ++i) {
+        musics.push_back({
+            generate_music_id(),
+            title[i],
+            artist[i],
+            duration[i]
+        });
     }
 }
 
