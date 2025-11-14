@@ -67,6 +67,11 @@ void admin_delete_playlist();
 void add_music_to_playlist(const string &current_user, bool admin_mode);
 void play_playlist(Playlist &playlist);
 
+// Manajemen Menu
+void admin_menu(const string &username);
+void user_menu(const string &username);
+void playlist_menu(const string &username);
+
 
 int main()
 {
@@ -431,6 +436,139 @@ void play_playlist(Playlist &playlist) {
         }
     }
 }
+
+void playlist_menu(const string &username) {
+    while (true) {
+        cout << "\n=== PLAYLIST MENU ===\n"
+                << "1) Putar Playlist \n"
+                << "2) Delete playlist\n"
+                << "3) Edit playlists\n"
+                << "4) Keluar\n";
+
+        int option;
+        cout << "menu: "; cin >> option;
+
+        if (option == 4 || option == 0) return;
+
+        int playlist_id;
+        cout << "ID Playlist: "; cin >> playlist_id;
+
+        int pl_index = find_playlist_index_by_id(playlist_id);
+
+        clear_input();
+
+        if (pl_index != -1) {
+            if (option == 1) {
+                play_playlist(playlists.at(pl_index));
+            } else if (option == 2) {
+                delete_user_playlist(playlist_id, username);
+                list_playlists_all_user();
+            } else if (option == 3) {
+                update_user_playlist(playlist_id, username);
+                list_playlists_all_user();
+            } else {
+                cout << "Pilihan tidak valid.\n";
+            }
+        } else {
+            cout << "ID playlist tidak di temukan\n";
+        }
+
+    }
+}
+
+void admin_menu(const string &username) {
+    while (true) {
+        cout << "\n=== ADMIN MENU ===\n"
+                << "1) Add music\n"
+                << "2) Update music\n"
+                << "3) Delete music\n"
+                << "4) List music\n"
+                << "5) Add playlist\n"
+                << "6) Update playlist\n"
+                << "7) Delete playlist\n"
+                << "8) List playlists\n"
+                << "9) Show playlist contents\n"
+                << "10) Add music to playlist\n"
+                << "0) Logout\n"
+                << "Choose: ";
+        int option;
+        cin >> option;
+        switch (option) {
+            case 1: add_music();
+                break;
+            case 2: update_music();
+                break;
+            case 3: delete_music();
+                break;
+            case 4: list_all_music();
+                break;
+            case 5: admin_add_playlist();
+                break;
+            case 6: admin_update_playlist();
+                break;
+            case 7: admin_delete_playlist();
+                break;
+            case 8: list_playlists_all_user();
+                break;
+            case 9: {
+                list_playlists_all_user();
+                ID_t id;
+                cout << "Masukkan playlist id: "; cin >> id;
+                int pidx = find_playlist_index_by_id(id);
+                if (pidx == -1) cout << "Playlist tidak ada.\n";
+                else show_playlist_contents(playlists[pidx]);
+                break;
+            }
+            case 10: add_music_to_playlist(username, true);
+                break;
+            case 0: return;
+            default: cout << "Pilihan tidak valid.\n";
+        }
+    }
+}
+
+void user_menu(const string &username) {
+    while (true) {
+        cout << "\n=== USER MENU ===\n"
+                << "1) Create playlist\n"
+                << "2) List playlists\n"
+                << "3) Show playlist contents\n"
+                << "4) Add music to my playlist\n"
+                << "5) List all music\n"
+                << "6) Your Playlist\n"
+                << "0) Logout\n"
+                << "Choose: ";
+        int option;
+        cin >> option;
+        switch (option) {
+            case 1: user_create_playlist(username);
+                break;
+            case 2: {
+                list_playlists_all_user();
+                playlist_menu(username);
+                break;
+            }
+            case 3: {
+                list_playlists_all_user();
+                ID_t id;
+                cout << "Masukkan playlist id: "; cin >> id;
+                int pidx = find_playlist_index_by_id(id);
+                if (pidx == -1) cout << "Playlist tidak ada.\n";
+                else {
+                    show_playlist_contents(playlists[pidx]);
+                }
+                break;
+            }
+            case 4: add_music_to_playlist(username, false);
+                break;
+            case 5: list_all_music();
+                break;
+            case 0: return;
+            default: cout << "Pilihan tidak valid.\n";
+        }
+    }
+}
+
 
 
 
