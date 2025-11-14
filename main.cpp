@@ -235,5 +235,155 @@ void delete_music() {
     cout << "Music dihapus dan diremove dari semua playlist.\n";
 }
 
+void list_playlists_all_user() {
+    cout << "\n--- PLAYLISTS ---\n";
+    if (playlists.empty()) {
+        cout << "(kosong)\n";
+        return;
+    }
+    for (auto &p: playlists) {
+        cout << "id:" << p.id << " | " << p.name << " | owner:" << p.owner_username
+                << " | Jumlah Musik:" << p.music_ids.size() << "\n";
+    }
+}
+
+void show_playlist_contents(const Playlist &playlist) {
+    cout << "\nPlaylist: " << playlist.name << " (id:" << playlist.id << ") pemilik:" << playlist.owner_username << "\n";
+    if (playlist.music_ids.empty()) {
+        cout << "(kosong)\n";
+        return;
+    }
+    for (auto mid: playlist.music_ids) {
+        int music_index = find_music_index_by_id(mid);
+        if (music_index != -1) {
+            auto &m = musics[music_index];
+            cout << " - " << m.id << " | " << m.title << " - " << m.artist << " (" << m.duration_seconds << "s)\n";
+        } else {
+            cout << " - " << mid << " | (music tidak ditemukan)\n";
+        }
+    }
+}
+
+void delete_user_playlist(const ID_t playlist_id, const string &username) {
+    int pl_index = find_playlist_index_by_id(playlist_id);
+    int user_index = find_user_index_by_username(username);
+
+    if (pl_index == -1) {
+        cout << "Playlist Id not found.\n";
+        return;
+    }
+
+    playlists.erase(playlists.begin() + pl_index);
+    auto playlist_ids = playlists.at(user_index).music_ids;
+
+    playlist_ids.erase(
+        remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
+        playlist_ids.end()
+        );
+}
+
+void update_user_playlist(const ID_t playlist_id, const string &username) {
+    int pl_index = find_playlist_index_by_id(playlist_id);
+
+    if (playlists.at(pl_index).owner_username != username) {
+        cout << "Can't update playlist\n";
+        return;
+    }
+
+    string new_pl_name;
+    cout << "New Name: "; getline(cin >> ws, new_pl_name);
+
+    if (pl_index == -1) {
+        cout << "Playlist Id not found.\n";
+        return;
+    }
+
+    playlists.at(pl_index).name = new_pl_name;
+    cout << "Success Update playlist" << endl;
+}
+
+void admin_add_playlist() {
+    cout << "\n=== ADMIN ADD PLAYLIST ===\n";
+    clear_input();
+    string name, owner;
+    cout << "Playlist name: "; getline(cin, name);
+    cout << "Owner username: "; getline(cin, owner);
+    if (find_user_index_by_username(owner) == -1) {
+        cout << "Owner tidak ditemukan.\n";
+        return;
+    }
+    playlists.push_back({generate_playlist_id(), name, owner, {}});
+
+    int user_index = find_user_index_by_username(owner);
+    users.at(user_index).playlist_ids.push_back(playlists.back().id);
+
+    cout << "Playlist dibuat id=" << playlists.back().name << "\n";
+}
+
+void user_create_playlist(const string &username) {
+    cout << "\n=== CREATE PLAYLIST ===\n";
+    clear_input();
+
+    string name;
+    cout << "Playlist name: "; getline(cin, name);
+
+    playlists.push_back({
+        .id = generate_playlist_id(),
+        .name = name,
+        .owner_username = username,
+        .music_ids = {},
+    });
+
+    int user_index = find_user_index_by_username(username);
+    users.at(user_index).playlist_ids.push_back(playlists.back().id);
+
+    cout << "Playlist dibuat id=" << playlists.back().name << "\n";
+}
+
+void admin_update_playlist() {
+    list_playlists_all_user();
+    cout << "\nMasukkan playlist id untuk diupdate: ";
+    int id;
+    cin >> id;
+    int pl_index = find_playlist_index_by_id(id);
+    if (pl_index == -1) {
+        cout << "Playlist tidak ada.\n";
+        return;
+    }
+    clear_input();
+
+    string name;
+    cout << "New name (enter untuk skip): "; getline(cin, name);
+
+    if (!name.empty()) playlists[pl_index].name = name;
+
+    string owner;
+    cout << "New owner (enter untuk skip): "; getline(cin, owner);
+
+    if (!owner.empty()) {
+        if (find_user_index_by_username(owner) == -1) {
+            cout << "Owner baru tidak ditemukan. skip.\n";
+        } else playlists[pl_index].owner_username = owner;
+    }
+
+    cout << "Playlist updated.\n";
+}
+
+void admin_delete_playlist() {
+    list_playlists_all_user();
+    ID_t id;
+    cout << "\nMasukkan playlist id untuk dihapus: "; cin >> id;
+
+    int pl_index = find_playlist_index_by_id(id);
+    if (pl_index == -1) {
+        cout << "Playlist tidak ada.\n";
+        return;
+    }
+
+    playlists.erase(playlists.begin() + pl_index);
+    cout << "Playlist dihapus.\n";
+}
+
+
 
 
