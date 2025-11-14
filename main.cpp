@@ -30,15 +30,18 @@ struct Playlist {
     deque<ID_t> music_ids;
 };
 
+// penyimpanan data
+deque<User> users = {};
+deque<Music> musics = {};
+deque<Playlist> playlists = {};
+
 // Membuat id
 ID_t generate_user_id();
 ID_t generate_music_id();
 ID_t generate_playlist_id();
 
-// penyimpanan data
-deque<User> users = {};
-deque<Music> musics = {};
-deque<Playlist> playlists = {};
+
+void clear_input();
 
 
 int main()
@@ -61,3 +64,10 @@ ID_t generate_playlist_id() {
     static ID_t counter = 1;
     return counter++;
 }
+
+// utils
+void clear_input() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
