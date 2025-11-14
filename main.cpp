@@ -54,6 +54,15 @@ void list_all_music();
 void update_music();
 void delete_music();
 
+// Playlist manajemen (admin & user create)
+void list_playlists_all_user();
+void show_playlist_contents(const Playlist &playlist);
+void delete_user_playlist(ID_t playlist_id, const string &username);
+void update_user_playlist(ID_t playlist_id, const string &username);
+void user_create_playlist(const string &username);
+void admin_add_playlist();
+void admin_update_playlist();
+void admin_delete_playlist();
 
 int main()
 {
@@ -225,5 +234,6 @@ void delete_music() {
     musics.erase(musics.begin() + idx);
     cout << "Music dihapus dan diremove dari semua playlist.\n";
 }
+
 
 
