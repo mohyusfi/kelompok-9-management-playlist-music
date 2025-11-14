@@ -44,8 +44,12 @@ int find_user_index_by_username(const string &username);
 int find_music_index_by_id(ID_t id);
 int find_playlist_index_by_id(ID_t id);
 
-
 void clear_input();
+
+bool register_user();
+ID_t login_user(string &out_username, string &out_role);
+
+
 
 
 int main()
@@ -95,4 +99,44 @@ int find_playlist_index_by_id(const ID_t id) {
     }
     return -1;
 }
+
+bool register_user() {
+    cout << "\n=== REGISTER ===\n";
+    string username;
+    cout << "Username: ";
+    cin >> username;
+    if (find_user_index_by_username(username) != -1) {
+        cout << "Username sudah dipakai.\n";
+        return false;
+    }
+    string password;
+    cout << "Password: ";
+    cin >> password;
+    users.push_back({generate_user_id(), username, password, "user"});
+    cout << "Register sukses. Lu sekarang user.\n";
+    return true;
+}
+
+ID_t login_user(string &out_username, string &out_role) {
+    cout << "\n=== LOGIN ===\n";
+    string username, password;
+    cout << "Username: "; cin >> username;
+    cout << "Password: "; cin >> password;
+    int idx = find_user_index_by_username(username);
+    if (idx == -1) {
+        cout << "User tidak ditemukan.\n";
+        return -1;
+    }
+
+    if (users[idx].password != password) {
+        cout << "Password salah.\n";
+        return -1;
+    }
+
+    out_username = users[idx].username;
+    out_role = users[idx].role;
+    cout << "Login berhasil. Role: " << out_role << "\n";
+    return users[idx].id;
+}
+
 
