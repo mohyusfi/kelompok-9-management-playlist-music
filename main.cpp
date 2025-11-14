@@ -6,8 +6,6 @@
 using namespace std;
 typedef unsigned int ID_t;
 
-typedef unsigned int ID_t;
-
 struct User {
     ID_t id;
     string username;
@@ -49,17 +47,23 @@ void clear_input();
 bool register_user();
 ID_t login_user(string &out_username, string &out_role);
 
-void add_music();
+// music
 void list_all_music();
+// admin
+void add_music();
 void update_music();
 void delete_music();
 
 // Playlist manajemen (admin & user create)
+bool is_pl_id_in_playlist_ids(ID_t playlist_id, string &username);
+void add_pl_to_playlis_ids(ID_t playlist_id, string &username);
+void list_playlist_current_user(const string &username);
 void list_playlists_all_user();
 void show_playlist_contents(const Playlist &playlist);
 void delete_user_playlist(ID_t playlist_id, const string &username);
 void update_user_playlist(ID_t playlist_id, const string &username);
 void user_create_playlist(const string &username);
+
 void admin_add_playlist();
 void admin_update_playlist();
 void admin_delete_playlist();
@@ -69,13 +73,12 @@ void play_playlist(Playlist &playlist);
 
 // Manajemen Menu
 void admin_menu(const string &username);
-void user_menu(const string &username);
+void user_menu(string &username);
 void playlist_menu(const string &username);
 
 // sample data
 void seed_admin();
 void data_dummy();
-
 
 int main()
 {
@@ -274,6 +277,59 @@ void delete_music() {
     cout << "Music dihapus dan diremove dari semua playlist.\n";
 }
 
+bool is_pl_id_in_playlist_ids(ID_t playlist_id, string &username) {
+    int user_index = find_user_index_by_username(username);
+
+    for (auto &pl_id : users.at(user_index).playlist_ids)
+    {
+        if (pl_id == playlist_id) return true;        
+    }
+
+    return false;
+}
+
+void add_pl_to_playlis_ids(ID_t playlist_id, string &username) {
+    bool is_exists = is_pl_id_in_playlist_ids(playlist_id, username);
+
+    if (is_exists) {
+        cout << "playlist telah ada dikoleksimu mas" << endl;
+        return;
+    }
+
+    int user_index = find_user_index_by_username(username);
+    users.at(user_index).playlist_ids.push_back(playlist_id);
+    cout << "playlist dengan id:" << users.at(user_index).playlist_ids.back() << "ditambahkan ke koleksimu" "\n";
+}
+
+
+void list_playlist_current_user(const string &username) {
+    int user_index = find_user_index_by_username(username);
+    if (user_index == -1)
+    {
+        cout << "user tidak di termukan" << endl;
+        return;
+    }
+
+    User current_user = users.at(user_index);
+
+    cout << "\n--- PLAYLISTS ---\n";
+    if (current_user.playlist_ids.empty()) {
+        cout << "(kosong)\n";
+        return;
+    }
+
+    for (size_t i = 0; i < current_user.playlist_ids.size(); i++)
+    {
+        int pl_index = find_playlist_index_by_id(current_user.playlist_ids.at(i));
+        if (pl_index != -1)
+        {
+            Playlist p = playlists.at(pl_index);
+            cout << "id:" << p.id << " | " << p.name << " | pemilik:" << p.owner_username
+                    << " | Jumlah Musik:"<< p.music_ids.size() << "\n";
+        }
+    } 
+}
+
 void list_playlists_all_user() {
     cout << "\n--- PLAYLISTS ---\n";
     if (playlists.empty()) {
@@ -307,18 +363,25 @@ void delete_user_playlist(const ID_t playlist_id, const string &username) {
     int pl_index = find_playlist_index_by_id(playlist_id);
     int user_index = find_user_index_by_username(username);
 
-    if (pl_index == -1) {
+    if (pl_index == -1 || user_index == -1) {
         cout << "Playlist Id not found.\n";
         return;
     }
 
-    playlists.erase(playlists.begin() + pl_index);
-    auto playlist_ids = playlists.at(user_index).music_ids;
+    if (username != playlists.at(pl_index).owner_username) {
+        cout << "tidak bisa delete playlist orang bego" << endl;
+        return;
+    }
+
+    auto playlist_ids = users.at(user_index).playlist_ids;
 
     playlist_ids.erase(
         remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
         playlist_ids.end()
         );
+
+    playlists.erase(playlists.begin() + pl_index);
+    cout << "playlist dengan id:" << playlist_id << "berhasil di hapus" << endl;
 }
 
 void update_user_playlist(const ID_t playlist_id, const string &username) {
@@ -485,17 +548,13 @@ void playlist_menu(const string &username) {
 
         int pl_index = find_playlist_index_by_id(playlist_id);
 
-        clear_input();
-
         if (pl_index != -1) {
             if (option == 1) {
                 play_playlist(playlists.at(pl_index));
             } else if (option == 2) {
                 delete_user_playlist(playlist_id, username);
-                list_playlists_all_user();
             } else if (option == 3) {
                 update_user_playlist(playlist_id, username);
-                list_playlists_all_user();
             } else {
                 cout << "Pilihan tidak valid.\n";
             }
@@ -557,17 +616,17 @@ void admin_menu(const string &username) {
     }
 }
 
-void user_menu(const string &username) {
+void user_menu(string &username) {
     while (true) {
         cout << "\n=== USER MENU ===\n"
-                << "1) Create playlist\n"
+                << "1) Buat playlist\n"
                 << "2) List playlists\n"
-                << "3) Show playlist contents\n"
-                << "4) Add music to my playlist\n"
-                << "5) List all music\n"
-                << "6) Your Playlist\n"
+                << "3) Tampilkan playlist content\n"
+                << "4) Tambah Musik ke Playlist\n"
+                << "5) List Semua music\n"
+                << "6) Koleksimu\n"
                 << "0) Logout\n"
-                << "Choose: ";
+                << "Pilih: ";
         int option;
         cin >> option;
         switch (option) {
@@ -586,6 +645,11 @@ void user_menu(const string &username) {
                 if (pidx == -1) cout << "Playlist tidak ada.\n";
                 else {
                     show_playlist_contents(playlists[pidx]);
+                    string choice;
+                    cout << "Tambah ke koleksi 1:(yes)/0:(no)? "; getline(cin >> ws, choice);
+                    if (choice == "1") {
+                        add_pl_to_playlis_ids(id, username);
+                    }
                 }
                 break;
             }
@@ -593,6 +657,11 @@ void user_menu(const string &username) {
                 break;
             case 5: list_all_music();
                 break;
+            case 6: {
+                list_playlist_current_user(username);
+                playlist_menu(username);
+                break;
+            } 
             case 0: return;
             default: cout << "Pilihan tidak valid.\n";
         }
@@ -663,8 +732,3 @@ void data_dummy() {
         });
     }
 }
-
-
-
-
-
