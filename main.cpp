@@ -161,4 +161,49 @@ void add_music() {
     cout << "Music ditambah. name = " << musics.back().title << "\n";
 }
 
+void list_all_music() {
+    cout << "\n--- ALL MUSIC ---\n";
+    if (musics.empty()) {
+        cout << "(kosong)\n";
+        return;
+    }
+    for (auto &m: musics) {
+        cout << "id:" << m.id
+                << " | " << m.title
+                << " - " << m.artist
+                << " (" << m.duration_seconds << "s)\n";
+    }
+}
+
+void update_music() {
+    list_all_music();
+
+    ID_t id;
+    cout << "\nMasukkan music id untuk diupdate: "; cin >> id;
+
+    int idx = find_music_index_by_id(id);
+    if (idx == -1) {
+        cout << "Music tidak ada.\n";
+        return;
+    }
+    clear_input();
+
+    string title;
+    cout << "New Title (enter untuk skip): "; getline(cin, title);
+
+    if (!title.empty()) musics[idx].title = title;
+
+    string artist;
+    cout << "New Artist (enter untuk skip): "; getline(cin, artist);
+
+    if (!artist.empty()) musics[idx].artist = artist;
+
+    cout << "New Duration (0 untuk skip): ";
+    int dur;
+    cin >> dur;
+
+    if (dur > 0) musics[idx].duration_seconds = dur;
+    cout << "Music updated.\n";
+}
+
 
