@@ -49,7 +49,10 @@ void clear_input();
 bool register_user();
 ID_t login_user(string &out_username, string &out_role);
 
-
+void add_music();
+void list_all_music();
+void update_music();
+void delete_music();
 
 
 int main()
@@ -137,6 +140,25 @@ ID_t login_user(string &out_username, string &out_role) {
     out_role = users[idx].role;
     cout << "Login berhasil. Role: " << out_role << "\n";
     return users[idx].id;
+}
+
+void add_music() {
+    cout << "\n=== ADD MUSIC ===\n";
+    string title, artist;
+    int dur;
+    clear_input();
+    cout << "Title: "; getline(cin, title);
+    cout << "Artist: "; getline(cin, artist);
+    cout << "Duration (seconds): "; cin >> dur;
+
+    musics.push_back({
+        generate_music_id(),
+        title,
+        artist,
+        dur
+    });
+
+    cout << "Music ditambah. name = " << musics.back().title << "\n";
 }
 
 
