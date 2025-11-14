@@ -64,6 +64,10 @@ void admin_add_playlist();
 void admin_update_playlist();
 void admin_delete_playlist();
 
+void add_music_to_playlist(const string &current_user, bool admin_mode);
+void play_playlist(Playlist &playlist);
+
+
 int main()
 {
 
@@ -382,6 +386,50 @@ void admin_delete_playlist() {
 
     playlists.erase(playlists.begin() + pl_index);
     cout << "Playlist dihapus.\n";
+}
+
+void add_music_to_playlist(const string &current_user, bool admin_mode) {
+    list_all_music();
+    list_playlists_all_user();
+    cout << "\nMasukkan playlist id target: ";
+    int input_pl_index;
+    cin >> input_pl_index;
+    int pl_index = find_playlist_index_by_id(input_pl_index);
+    if (pl_index == -1) {
+        cout << "Playlist tidak ada.\n";
+        return;
+    }
+
+    if (!admin_mode && playlists[pl_index].owner_username != current_user) {
+        cout << "Akses ditolak. Kamu hanya bisa menambahkan ke playlist milikmu.\n";
+        return;
+    }
+
+    int mid;
+    cout << "Masukkan music id yang mau ditambahkan: "; cin >> mid;
+
+    int midx = find_music_index_by_id(mid);
+    if (midx == -1) {
+        cout << "Music tidak ada.\n";
+        return;
+    }
+    playlists[pl_index].music_ids.push_back(mid);
+    cout << "Music ditambahkan ke playlist.\n";
+}
+
+void play_playlist(Playlist &playlist) {
+    if (playlist.music_ids.empty()) {
+        cout << "Music Tidak ada Tambah dulu.\n";
+        return;
+    }
+
+    for (auto const &music_id: playlist.music_ids) {
+        int music_index = find_music_index_by_id(music_id);
+        if (music_index != -1) {
+            cout << musics.at(music_index).title << " is Playingg now......." << endl;
+            this_thread::sleep_for(chrono::milliseconds(500));
+        }
+    }
 }
 
 
