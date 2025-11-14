@@ -30,6 +30,11 @@ struct Playlist {
     deque<ID_t> music_ids;
 };
 
+// Membuat id
+ID_t generate_user_id();
+ID_t generate_music_id();
+ID_t generate_playlist_id();
+
 // penyimpanan data
 deque<User> users = {};
 deque<Music> musics = {};
@@ -39,4 +44,20 @@ deque<Playlist> playlists = {};
 int main()
 {
 
+
+}
+
+ID_t generate_user_id() {
+    static ID_t counter = 1;
+    return counter++;
+}
+
+ID_t generate_music_id() {
+    static ID_t counter = 1;
+    return counter++;
+}
+
+ID_t generate_playlist_id() {
+    static ID_t counter = 1;
+    return counter++;
 }
