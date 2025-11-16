@@ -48,9 +48,6 @@ ID_t login_user(string &out_username);
 
 // music
 void list_all_music();
-void add_music();
-void update_music();
-void delete_music();
 
 // Playlist manajemen
 bool is_pl_id_in_playlist_ids(ID_t playlist_id, const string &username);
@@ -463,7 +460,6 @@ void user_menu(string &username) {
         cout << "\n=== USER MENU ===\n"
                 << "1) Buat playlist\n"
                 << "2) List playlists\n"
-                // << "3) Tampilkan playlist content\n"
                 << "3) Tambah Musik ke Playlist\n"
                 << "4) List Semua music\n"
                 << "5) Koleksimu\n"
