@@ -10,7 +10,6 @@ struct User {
     ID_t id;
     string username;
     string password;
-    string role;
     deque<ID_t> playlist_ids;
 };
 
@@ -45,16 +44,15 @@ int find_playlist_index_by_id(ID_t id);
 void clear_input();
 
 bool register_user();
-ID_t login_user(string &out_username, string &out_role);
+ID_t login_user(string &out_username);
 
 // music
 void list_all_music();
-// admin
 void add_music();
 void update_music();
 void delete_music();
 
-// Playlist manajemen (admin & user create)
+// Playlist manajemen
 bool is_pl_id_in_playlist_ids(ID_t playlist_id, const string &username);
 void add_pl_to_playlis_ids(ID_t playlist_id, const string &username);
 void list_playlist_current_user(const string &username);
@@ -64,25 +62,19 @@ void delete_user_playlist(ID_t playlist_id, const string &username);
 void update_user_playlist(ID_t playlist_id, const string &username);
 void user_create_playlist(const string &username);
 
-void admin_add_playlist();
-void admin_update_playlist();
-void admin_delete_playlist();
-
-void add_music_to_playlist(const string &current_user, bool admin_mode);
+void add_music_to_playlist(const string &current_user);
 void play_playlist(Playlist &playlist);
 
 // Manajemen Menu
-void admin_menu(const string &username);
 void user_menu(string &username);
-void playlist_menu(const string &username);
+void playlist_menu(const string &username, bool current_user = false);
 
 // sample data
-void seed_admin();
+void seed_user();
 void data_dummy();
 
-int main()
-{
-    seed_admin();
+int main() {
+    seed_user();
     data_dummy();
     cout << "Welcome To Spotify Versi Jadul\n";
     while (true) {
@@ -96,11 +88,10 @@ int main()
         if (choice == 1) {
             register_user();
         } else if (choice == 2) {
-            string uname, role;
-            ID_t uid = login_user(uname, role);
+            string uname;
+            ID_t uid = login_user(uname);
             if (uid != -1) {
-                if (role == "admin") admin_menu(uname);
-                else user_menu(uname);
+                user_menu(uname);
             }
         } else if (choice == 0) {
             cout << "Bye.\n";
@@ -166,16 +157,18 @@ bool register_user() {
     string password;
     cout << "Password: ";
     cin >> password;
-    users.push_back({generate_user_id(), username, password, "user"});
+    users.push_back({generate_user_id(), username, password});
     cout << "Register sukses. Lu sekarang user.\n";
     return true;
 }
 
-ID_t login_user(string &out_username, string &out_role) {
+ID_t login_user(string &out_username) {
     cout << "\n=== LOGIN ===\n";
     string username, password;
-    cout << "Username: "; cin >> username;
-    cout << "Password: "; cin >> password;
+    cout << "Username: ";
+    cin >> username;
+    cout << "Password: ";
+    cin >> password;
     int idx = find_user_index_by_username(username);
     if (idx == -1) {
         cout << "User tidak ditemukan.\n";
@@ -188,28 +181,8 @@ ID_t login_user(string &out_username, string &out_role) {
     }
 
     out_username = users[idx].username;
-    out_role = users[idx].role;
-    cout << "Login berhasil. Role: " << out_role << "\n";
+    cout << "Login berhasil" << "\n";
     return users[idx].id;
-}
-
-void add_music() {
-    cout << "\n=== ADD MUSIC ===\n";
-    string title, artist;
-    int dur;
-    clear_input();
-    cout << "Title: "; getline(cin, title);
-    cout << "Artist: "; getline(cin, artist);
-    cout << "Duration (seconds): "; cin >> dur;
-
-    musics.push_back({
-        generate_music_id(),
-        title,
-        artist,
-        dur
-    });
-
-    cout << "Music ditambah. name = " << musics.back().title << "\n";
 }
 
 void list_all_music() {
@@ -226,62 +199,10 @@ void list_all_music() {
     }
 }
 
-void update_music() {
-    list_all_music();
-
-    ID_t id;
-    cout << "\nMasukkan music id untuk diupdate: "; cin >> id;
-
-    int idx = find_music_index_by_id(id);
-    if (idx == -1) {
-        cout << "Music tidak ada.\n";
-        return;
-    }
-    clear_input();
-
-    string title;
-    cout << "New Title (enter untuk skip): "; getline(cin, title);
-
-    if (!title.empty()) musics[idx].title = title;
-
-    string artist;
-    cout << "New Artist (enter untuk skip): "; getline(cin, artist);
-
-    if (!artist.empty()) musics[idx].artist = artist;
-
-    cout << "New Duration (0 untuk skip): ";
-    int dur;
-    cin >> dur;
-
-    if (dur > 0) musics[idx].duration_seconds = dur;
-    cout << "Music updated.\n";
-}
-
-void delete_music() {
-    list_all_music();
-    int id;
-    cout << "\nMasukkan music id untuk dihapus: "; cin >> id;
-    int idx = find_music_index_by_id(id);
-    if (idx == -1) {
-        cout << "Music tidak ada.\n";
-        return;
-    }
-    // remove references from playlists
-    for (auto &pl: playlists) {
-        pl.music_ids.erase(
-            remove(pl.music_ids.begin(), pl.music_ids.end(), id),
-            pl.music_ids.end()
-        );
-    }
-    musics.erase(musics.begin() + idx);
-    cout << "Music dihapus dan diremove dari semua playlist.\n";
-}
-
 bool is_pl_id_in_playlist_ids(ID_t playlist_id, const string &username) {
     int user_index = find_user_index_by_username(username);
 
-    for (auto &pl_id : users.at(user_index).playlist_ids)
-    {
+    for (auto &pl_id: users.at(user_index).playlist_ids) {
         if (pl_id == playlist_id) return true;
     }
 
@@ -304,8 +225,7 @@ void add_pl_to_playlis_ids(ID_t playlist_id, const string &username) {
 
 void list_playlist_current_user(const string &username) {
     int user_index = find_user_index_by_username(username);
-    if (user_index == -1)
-    {
+    if (user_index == -1) {
         cout << "user tidak di termukan" << endl;
         return;
     }
@@ -318,14 +238,12 @@ void list_playlist_current_user(const string &username) {
         return;
     }
 
-    for (size_t i = 0; i < current_user.playlist_ids.size(); i++)
-    {
+    for (size_t i = 0; i < current_user.playlist_ids.size(); i++) {
         int pl_index = find_playlist_index_by_id(current_user.playlist_ids.at(i));
-        if (pl_index != -1)
-        {
+        if (pl_index != -1) {
             Playlist p = playlists.at(pl_index);
             cout << "id:" << p.id << " | " << p.name << " | pemilik:" << p.owner_username
-                    << " | Jumlah Musik:"<< p.music_ids.size() << "\n";
+                    << " | Jumlah Musik:" << p.music_ids.size() << "\n";
         }
     }
 }
@@ -343,7 +261,8 @@ void list_playlists_all_user() {
 }
 
 void show_playlist_contents(const Playlist &playlist) {
-    cout << "\nPlaylist: " << playlist.name << " (id:" << playlist.id << ") pemilik:" << playlist.owner_username << "\n";
+    cout << "\nPlaylist: " << playlist.name << " (id:" << playlist.id << ") pemilik:" << playlist.owner_username <<
+            "\n";
     if (playlist.music_ids.empty()) {
         cout << "(kosong)\n";
         return;
@@ -364,7 +283,7 @@ void delete_user_playlist(const ID_t playlist_id, const string &username) {
     int user_index = find_user_index_by_username(username);
 
     if (pl_index == -1 || user_index == -1) {
-        cout << "Playlist Id not found.\n";
+        cout << "Playlist Tidak Ditemukan.\n";
         return;
     }
 
@@ -375,7 +294,7 @@ void delete_user_playlist(const ID_t playlist_id, const string &username) {
             playlist_ids.erase(
                 remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
                 playlist_ids.end()
-                );
+            );
             cout << "playlist berhasil dikoleksimu mas" << endl;
             return;
         }
@@ -383,11 +302,10 @@ void delete_user_playlist(const ID_t playlist_id, const string &username) {
         return;
     }
 
-
     playlist_ids.erase(
         remove(playlist_ids.begin(), playlist_ids.end(), playlist_id),
         playlist_ids.end()
-        );
+    );
 
     playlists.erase(playlists.begin() + pl_index);
     cout << "playlist dengan id:" << playlist_id << "berhasil di hapus" << endl;
@@ -402,7 +320,8 @@ void update_user_playlist(const ID_t playlist_id, const string &username) {
     }
 
     string new_pl_name;
-    cout << "New Name: "; getline(cin >> ws, new_pl_name);
+    cout << "New Name: ";
+    getline(cin >> ws, new_pl_name);
 
     if (pl_index == -1) {
         cout << "Playlist Id not found.\n";
@@ -413,30 +332,14 @@ void update_user_playlist(const ID_t playlist_id, const string &username) {
     cout << "Success Update playlist" << endl;
 }
 
-void admin_add_playlist() {
-    cout << "\n=== ADMIN ADD PLAYLIST ===\n";
-    clear_input();
-    string name, owner;
-    cout << "Playlist name: "; getline(cin, name);
-    cout << "Owner username: "; getline(cin, owner);
-    if (find_user_index_by_username(owner) == -1) {
-        cout << "Owner tidak ditemukan.\n";
-        return;
-    }
-    playlists.push_back({generate_playlist_id(), name, owner, {}});
-
-    int user_index = find_user_index_by_username(owner);
-    users.at(user_index).playlist_ids.push_back(playlists.back().id);
-
-    cout << "Playlist dibuat id=" << playlists.back().name << "\n";
-}
 
 void user_create_playlist(const string &username) {
     cout << "\n=== CREATE PLAYLIST ===\n";
     clear_input();
 
     string name;
-    cout << "Playlist name: "; getline(cin, name);
+    cout << "Playlist name: ";
+    getline(cin, name);
 
     playlists.push_back({
         .id = generate_playlist_id(),
@@ -451,53 +354,8 @@ void user_create_playlist(const string &username) {
     cout << "Playlist dibuat id=" << playlists.back().name << "\n";
 }
 
-void admin_update_playlist() {
-    list_playlists_all_user();
-    cout << "\nMasukkan playlist id untuk diupdate: ";
-    int id;
-    cin >> id;
-    int pl_index = find_playlist_index_by_id(id);
-    if (pl_index == -1) {
-        cout << "Playlist tidak ada.\n";
-        return;
-    }
-    clear_input();
 
-    string name;
-    cout << "New name (enter untuk skip): "; getline(cin, name);
-
-    if (!name.empty()) playlists[pl_index].name = name;
-
-    string owner;
-    cout << "New owner (enter untuk skip): "; getline(cin, owner);
-
-    if (!owner.empty()) {
-        if (find_user_index_by_username(owner) == -1) {
-            cout << "Owner baru tidak ditemukan. skip.\n";
-        } else playlists[pl_index].owner_username = owner;
-    }
-
-    cout << "Playlist updated.\n";
-}
-
-void admin_delete_playlist() {
-    list_playlists_all_user();
-    ID_t id;
-    cout << "\nMasukkan playlist id untuk dihapus: "; cin >> id;
-
-    int pl_index = find_playlist_index_by_id(id);
-    if (pl_index == -1) {
-        cout << "Playlist tidak ada.\n";
-        return;
-    }
-
-    playlists.erase(playlists.begin() + pl_index);
-    cout << "Playlist dihapus.\n";
-}
-
-void add_music_to_playlist(const string &current_user, bool admin_mode) {
-    list_all_music();
-    list_playlists_all_user();
+void add_music_to_playlist(const string &current_user) {
     cout << "\nMasukkan playlist id target: ";
     int input_pl_index;
     cin >> input_pl_index;
@@ -507,13 +365,14 @@ void add_music_to_playlist(const string &current_user, bool admin_mode) {
         return;
     }
 
-    if (!admin_mode && playlists[pl_index].owner_username != current_user) {
+    if (playlists[pl_index].owner_username != current_user) {
         cout << "Akses ditolak. Kamu hanya bisa menambahkan ke playlist milikmu.\n";
         return;
     }
 
     int mid;
-    cout << "Masukkan music id yang mau ditambahkan: "; cin >> mid;
+    cout << "Masukkan music id yang mau ditambahkan: ";
+    cin >> mid;
 
     int midx = find_music_index_by_id(mid);
     if (midx == -1) {
@@ -539,21 +398,37 @@ void play_playlist(Playlist &playlist) {
     }
 }
 
-void playlist_menu(const string &username) {
+void playlist_menu(const string &username, bool current_user) {
     while (true) {
+        if (current_user) {
+            list_playlist_current_user(username);
+        } else {
+            list_playlists_all_user();
+        }
+
         cout << "\n=== PLAYLIST MENU ===\n"
                 << "1) Putar Playlist \n"
                 << "2) Delete playlist\n"
                 << "3) Edit playlists\n"
-                << "4) Keluar\n";
+                << "4) Tampilkan Daftar Musik\n"
+                << "0) Keluar\n";
 
         int option;
-        cout << "menu: "; cin >> option;
+        cout << "menu: ";
+        cin >> option;
 
-        if (option == 4 || option == 0) return;
+        if (option == 0) return;
 
         int playlist_id;
-        cout << "ID Playlist: "; cin >> playlist_id;
+        cout << "ID Playlist: ";
+        cin >> playlist_id;
+
+        if (current_user) {
+            if (!is_pl_id_in_playlist_ids(playlist_id, username)) {
+                cout << "Playlist tidak ada di koleksi." << endl;
+                return;
+            }
+        }
 
         int pl_index = find_playlist_index_by_id(playlist_id);
 
@@ -564,63 +439,21 @@ void playlist_menu(const string &username) {
                 delete_user_playlist(playlist_id, username);
             } else if (option == 3) {
                 update_user_playlist(playlist_id, username);
+            } else if (option == 4) {
+                show_playlist_contents(playlists.at(pl_index));
+                if (current_user != true) {
+                    string choice;
+                    cout << "Tambah ke koleksi 1:(yes)/0:(no)? ";
+                    getline(cin >> ws, choice);
+                    if (choice == "1") {
+                        add_pl_to_playlis_ids(playlist_id, username);
+                    }
+                }
             } else {
                 cout << "Pilihan tidak valid.\n";
             }
         } else {
             cout << "ID playlist tidak di temukan\n";
-        }
-
-    }
-}
-
-void admin_menu(const string &username) {
-    while (true) {
-        cout << "\n=== ADMIN MENU ===\n"
-                << "1) Add music\n"
-                << "2) Update music\n"
-                << "3) Delete music\n"
-                << "4) List music\n"
-                << "5) Add playlist\n"
-                << "6) Update playlist\n"
-                << "7) Delete playlist\n"
-                << "8) List playlists\n"
-                << "9) Show playlist contents\n"
-                << "10) Add music to playlist\n"
-                << "0) Logout\n"
-                << "Choose: ";
-        int option;
-        cin >> option;
-        switch (option) {
-            case 1: add_music();
-                break;
-            case 2: update_music();
-                break;
-            case 3: delete_music();
-                break;
-            case 4: list_all_music();
-                break;
-            case 5: admin_add_playlist();
-                break;
-            case 6: admin_update_playlist();
-                break;
-            case 7: admin_delete_playlist();
-                break;
-            case 8: list_playlists_all_user();
-                break;
-            case 9: {
-                list_playlists_all_user();
-                ID_t id;
-                cout << "Masukkan playlist id: "; cin >> id;
-                int pidx = find_playlist_index_by_id(id);
-                if (pidx == -1) cout << "Playlist tidak ada.\n";
-                else show_playlist_contents(playlists[pidx]);
-                break;
-            }
-            case 10: add_music_to_playlist(username, true);
-                break;
-            case 0: return;
-            default: cout << "Pilihan tidak valid.\n";
         }
     }
 }
@@ -630,10 +463,10 @@ void user_menu(string &username) {
         cout << "\n=== USER MENU ===\n"
                 << "1) Buat playlist\n"
                 << "2) List playlists\n"
-                << "3) Tampilkan playlist content\n"
-                << "4) Tambah Musik ke Playlist\n"
-                << "5) List Semua music\n"
-                << "6) Koleksimu\n"
+                // << "3) Tampilkan playlist content\n"
+                << "3) Tambah Musik ke Playlist\n"
+                << "4) List Semua music\n"
+                << "5) Koleksimu\n"
                 << "0) Logout\n"
                 << "Pilih: ";
         int option;
@@ -646,29 +479,15 @@ void user_menu(string &username) {
                 playlist_menu(username);
                 break;
             }
-            case 3: {
+            case 3:
+                list_all_music();
                 list_playlists_all_user();
-                ID_t id;
-                cout << "Masukkan playlist id: "; cin >> id;
-                int pidx = find_playlist_index_by_id(id);
-                if (pidx == -1) cout << "Playlist tidak ada.\n";
-                else {
-                    show_playlist_contents(playlists[pidx]);
-                    string choice;
-                    cout << "Tambah ke koleksi 1:(yes)/0:(no)? "; getline(cin >> ws, choice);
-                    if (choice == "1") {
-                        add_pl_to_playlis_ids(id, username);
-                    }
-                }
+                add_music_to_playlist(username);
                 break;
-            }
-            case 4: add_music_to_playlist(username, false);
+            case 4: list_all_music();
                 break;
-            case 5: list_all_music();
-                break;
-            case 6: {
-                list_playlist_current_user(username);
-                playlist_menu(username);
+            case 5: {
+                playlist_menu(username, true);
                 break;
             }
             case 0: return;
@@ -677,17 +496,17 @@ void user_menu(string &username) {
     }
 }
 
-void seed_admin() {
-    // create default admin if none exists
-    if (find_user_index_by_username("admin") == -1) {
-        users.push_back({generate_user_id(), "admin", "admin", "admin"});
-    }
-
+void seed_user() {
     users.push_back({
         .id = generate_music_id(),
         .username = "yusfi",
         .password = "123",
-        .role = "user",
+        .playlist_ids = {},
+    });
+    users.push_back({
+        .id = generate_music_id(),
+        .username = "rizal",
+        .password = "123",
         .playlist_ids = {},
     });
 }
