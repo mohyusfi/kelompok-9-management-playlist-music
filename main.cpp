@@ -59,6 +59,7 @@ void delete_user_playlist(ID_t playlist_id, const string &username);
 void update_user_playlist(ID_t playlist_id, const string &username);
 void user_create_playlist(const string &username);
 
+bool is_music_already_in_playlist(ID_t music_id, ID_t playlist_id);
 void add_music_to_playlist(const string &current_user);
 void play_playlist(Playlist &playlist);
 
@@ -216,7 +217,7 @@ void add_pl_to_playlis_ids(ID_t playlist_id, const string &username) {
 
     int user_index = find_user_index_by_username(username);
     users.at(user_index).playlist_ids.push_back(playlist_id);
-    cout << "playlist dengan id:" << users.at(user_index).playlist_ids.back() << "ditambahkan ke koleksimu" "\n";
+    cout << "playlist dengan id:" << users.at(user_index).playlist_ids.back() << " ditambahkan ke koleksimu" "\n";
 }
 
 
@@ -227,7 +228,7 @@ void list_playlist_current_user(const string &username) {
         return;
     }
 
-    User current_user = users.at(user_index);
+    User &current_user = users.at(user_index);
 
     cout << "\n--- PLAYLISTS ---\n";
     if (current_user.playlist_ids.empty()) {
@@ -238,7 +239,7 @@ void list_playlist_current_user(const string &username) {
     for (size_t i = 0; i < current_user.playlist_ids.size(); i++) {
         int pl_index = find_playlist_index_by_id(current_user.playlist_ids.at(i));
         if (pl_index != -1) {
-            Playlist p = playlists.at(pl_index);
+            Playlist &p = playlists.at(pl_index);
             cout << "id:" << p.id << " | " << p.name << " | pemilik:" << p.owner_username
                     << " | Jumlah Musik:" << p.music_ids.size() << "\n";
         }
@@ -258,6 +259,7 @@ void list_playlists_all_user() {
 }
 
 void show_playlist_contents(const Playlist &playlist) {
+    cout << "--- Daftar Musik DI " << playlist.name << " ---" << endl;
     cout << "\nPlaylist: " << playlist.name << " (id:" << playlist.id << ") pemilik:" << playlist.owner_username <<
             "\n";
     if (playlist.music_ids.empty()) {
@@ -351,6 +353,15 @@ void user_create_playlist(const string &username) {
     cout << "Playlist dibuat id=" << playlists.back().name << "\n";
 }
 
+bool is_music_already_in_playlist(ID_t music_id, ID_t playlist_id) {
+    int pl_id = find_playlist_index_by_id(playlist_id);
+    for (const auto &id: playlists.at(pl_id).music_ids) {
+        if (id == music_id) {
+            return true;
+        }
+    }
+    return false;
+}
 
 void add_music_to_playlist(const string &current_user) {
     cout << "\nMasukkan playlist id target: ";
@@ -361,6 +372,7 @@ void add_music_to_playlist(const string &current_user) {
         cout << "Playlist tidak ada.\n";
         return;
     }
+
 
     if (playlists[pl_index].owner_username != current_user) {
         cout << "Akses ditolak. Kamu hanya bisa menambahkan ke playlist milikmu.\n";
@@ -376,6 +388,12 @@ void add_music_to_playlist(const string &current_user) {
         cout << "Music tidak ada.\n";
         return;
     }
+
+    if (is_music_already_in_playlist(mid, playlists.at(pl_index).id) == true) {
+        cout << "Musik Telah ada di playlist ini" << endl;
+        return;
+    }
+
     playlists[pl_index].music_ids.push_back(mid);
     cout << "Music ditambahkan ke playlist.\n";
 }
@@ -471,8 +489,7 @@ void user_menu(string &username) {
             case 1: user_create_playlist(username);
                 break;
             case 2: {
-                list_playlists_all_user();
-                playlist_menu(username);
+                playlist_menu(username, false);
                 break;
             }
             case 3:
@@ -494,17 +511,32 @@ void user_menu(string &username) {
 
 void seed_user() {
     users.push_back({
-        .id = generate_music_id(),
+        .id = generate_user_id(),
         .username = "yusfi",
         .password = "123",
         .playlist_ids = {},
     });
+
+    playlists.push_back({
+        .id = generate_playlist_id(),
+        .name = "Coding Booster",
+        .owner_username = users.back().username,
+    });
+    users.back().playlist_ids.push_back(playlists.back().id);
+
     users.push_back({
-        .id = generate_music_id(),
+        .id = generate_user_id(),
         .username = "rizal",
         .password = "123",
         .playlist_ids = {},
     });
+
+    playlists.push_back({
+        .id = generate_playlist_id(),
+        .name = "Playlist Wibu",
+        .owner_username = users.back().username,
+    });
+    users.back().playlist_ids.push_back(playlists.back().id);
 }
 
 void data_dummy() {
